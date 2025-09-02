@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Follow;
 use Illuminate\Validation\ValidationException;
 use App\Notifications\LikeNotification;
+use App\Notifications\FollowNotification; 
 
 
 class SocialController extends Controller
@@ -178,6 +179,9 @@ class SocialController extends Controller
                 'follower_id' => $currentUser->id,
                 'followed_id' => $userToFollow->id,
             ]);
+
+            $userToFollow->notify(new FollowNotification($follow));
+
             return response()->json(['message' => 'User followed successfully.', 'following' => true], 201);
         }
     }
