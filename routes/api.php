@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\DiscoveryController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\LoginController;
-use App\Http\Controllers\Api\Auth\LogoutController; // تأكد من استيراد الكونترولر الجديد
+use App\Http\Controllers\Api\Auth\LogoutController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +50,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/projects/{project}/comments', [App\Http\Controllers\Api\CommentController::class, 'store']);
     Route::delete('/comments/{comment}', [App\Http\Controllers\Api\CommentController::class, 'destroy']);
     Route::post('/users/{id}/toggle-follow', [SocialController::class, 'toggleFollow']);
+
+
+    Route::get('/notifications', [UserController::class, 'getNotifications']);
+    Route::post('/notifications/{id}/mark-as-read', [UserController::class, 'markAsRead']);
+    
+    
 });
 
 // المسارات العامة التي لا تتطلب مصادقة (للعرض فقط)

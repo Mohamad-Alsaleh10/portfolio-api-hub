@@ -6,10 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\ProjectMedia;
-use App\Http\Requests\StoreProjectRequest; // سيتم إنشاء هذا لاحقاً
-use App\Http\Requests\UpdateProjectRequest; // سيتم إنشاء هذا لاحقاً
+use App\Http\Requests\StoreProjectRequest;
+use App\Http\Requests\UpdateProjectRequest;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str; // لاستخدام Str::slug()
+use Illuminate\Support\Str;
+use App\Notifications\CommentNotification;
 
 class ProjectController extends Controller
 {
@@ -196,5 +197,27 @@ class ProjectController extends Controller
         $project->delete(); // هذا سيقوم أيضاً بحذف العلاقات (likes, comments, pivot tables) بسبب onDelete('cascade') في الترحيلات
 
         return response()->json(['message' => 'Project deleted successfully!'], 200);
+    }
+
+    public function addComment(Request $request, Project $project)
+    {
+        $request->validate(['content' => 'required|string|max:1000']);
+        
+        $user = $request->user();
+
+        $comment = $project->comments()->create([
+            'user_id' => $user->id,
+            'content' => $request->content,
+        ]);
+        
+        // إرسال الإشعار لصاحب المشروع إذا لم يكن هو نفسه المعلق
+        if ($project->user_id !== $user->id) {
+            $project->user->notify(new CommentNotification($comment));
+        }
+
+        return response()->json([
+            'message' => 'Comment added successfully.',
+            'comment' => $comment->load('user') // تحميل بيانات المستخدم الذي علق
+        ], 201);
     }
 }

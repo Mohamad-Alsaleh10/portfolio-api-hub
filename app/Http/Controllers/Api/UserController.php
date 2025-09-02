@@ -7,8 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use App\Http\Requests\UpdateUserProfileRequest; // سنقوم بإنشاء هذا لاحقاً
-use Illuminate\Support\Facades\Storage; // لاستخدام التخزين
+use App\Http\Requests\UpdateUserProfileRequest;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Notifications\DatabaseNotification; 
 
 class UserController extends Controller
 {
@@ -91,5 +92,43 @@ class UserController extends Controller
                 'role' => $user->role,
             ]
         ], 200);
+    }
+
+        /**
+     * Get all notifications for the authenticated user.
+     * جلب جميع الإشعارات للمستخدم المصادق عليه.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getNotifications(Request $request)
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'unread' => $user->unreadNotifications,
+            'read' => $user->readNotifications()->paginate(10)
+        ]);
+    }
+
+    /**
+     * Mark a specific notification as read.
+     * تحديد إشعار معين كمقروء.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $notificationId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function markAsRead(Request $request, string $notificationId)
+    {
+        $user = $request->user();
+        $notification = $user->notifications()->find($notificationId);
+
+        if ($notification) {
+            $notification->markAsRead();
+            return response()->json(['message' => 'Notification marked as read.']);
+        }
+
+        return response()->json(['message' => 'Notification not found.'], 404);
     }
 }
